@@ -18,9 +18,6 @@ class Zendesk
       return
     end
 
-    email = ""
-    token = ""
-
     file.each_line(chomp: true) do |line|
       key, *value = line.split("=")
 
