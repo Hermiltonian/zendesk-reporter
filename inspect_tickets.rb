@@ -53,7 +53,7 @@ class Zendesk
 
   def new_in_thisweek
     query = URI.encode_www_form([
-      ["query", "created>#{begin_date} created<=#{end_date}"],
+      ["query", "created>#{begin_date} created<=#{end_date} type:ticket"],
       ["sort_by", "created_at"],
       ["sort_order", "asc"],
     ])
@@ -85,7 +85,7 @@ class Zendesk
 
   def solved_in_thisweek
     query = URI.encode_www_form([
-      ["query", "solved>#{begin_date} solved<=#{end_date}"],
+      ["query", "solved>#{begin_date} solved<=#{end_date} type:ticket"],
       ["sort_by", "created_at"],
       ["sort_order", "asc"],
     ])
