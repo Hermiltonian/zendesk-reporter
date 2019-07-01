@@ -60,28 +60,33 @@ module Zendesk
       tickets
     end
 
-    file.close
+    def get_metrics(ticket_id)
+      url = URI.parse("https://sample.zendesk.com/api/v2/tickets/#{ticket_id}/metrics.json")
 
-    @begin_date = (Time.now - 3600 * 24 * 7).strftime("%FT17:00:00+09:00")
-    @end_date = (Time.now).strftime("%FT17:00:00+09:00")
-  end
+      auth = "#{@email}/token:#{@token}"
+      enc = Base64.encode64(auth).gsub("\n", "")
+      headers = { Authorization: "Basic #{enc}" }
 
-  def search_tickets(query)
-    url = URI.parse("https://sample.zendesk.com/api/v2/search.json?#{query}")
+      req = Net::HTTP::Get.new(url, headers)
 
-    auth = "#{@email}/token:#{@token}"
-    enc = Base64.encode64(auth).gsub("\n", "")
-    headers = { Authorization: "Basic #{enc}" }
+      response = Net::HTTP.start(url.host, url.port, use_ssl: url.scheme == 'https') do |http|
+        http.request(req)
+      end
 
-    req = Net::HTTP::Get.new(url, headers)
+      if response.header["X-Rate-Limit-Remaining"].to_i < 10
+        puts "Rate Limit is low!! Please wait a minute for recovering"
+        sleep(10)
+      end
 
-    response = Net::HTTP.start(url.host, url.port, use_ssl: url.scheme == 'https') do |http|
-      http.request(req)
+      raise RuntimeError unless response.is_a?(Net::HTTPSuccess)
+      JSON.parse(response.body)
     end
 
-    raise RuntimeError unless response.is_a?(Net::HTTPSuccess)
-    tickets = JSON.parse(response.body)
-    tickets["results"].delete_if { |t| t["status"].nil? }
+    def metrics(tickets)
+      tickets["results"].map do |t|
+        get_metrics(t["id"])
+      end
+    end
 
     def get_new_in_thisweek
       query = URI.encode_www_form([
@@ -180,65 +185,68 @@ module Zendesk
     end
   end
 
-  def solved_in_thisweek
-    query = URI.encode_www_form([
-      ["query", "solved>#{begin_date} solved<=#{end_date} type:ticket"],
-      ["sort_by", "created_at"],
-      ["sort_order", "asc"],
-    ])
+  module Metrics
+    FIRST_REPLY_MINUTES_KPI = 60 * 24
+    FIRST_REPLY_MINUTES_SLA = 60 * 24 * 2
+    RESOLVE_MINUTES_KPI = 60 * 24 * 3
 
-    tickets = search_tickets(query)
+    def self.mean_and_std(array)
+      squared_array = array.map { |t| t**2 }
 
-    assignee = {
-      HogeSan: [],
-    }
+      mean = array.sum(0.0) / array.length
+      squared_mean = squared_array.sum(0.0) / squared_array.length
 
-    users = {
-      "000000000000": "HogeSan",
-    }
+      standard_deviation = Math.sqrt(squared_mean - mean)
 
-    tickets["results"].each do |t|
-      user_name = users[t["assignee_id"].to_s.to_sym]
-      assignee[user_name.to_sym] << t
+      { mean: mean, std: standard_deviation }
     end
 
-    puts "solved: #{tickets["results"].length}"
-    assignee.each do |user, t|
-      puts "#{user.to_s}: #{t.length}"
+    def self.calculate_first_reply_stats(metrics)
+      replies_in_minutes = metrics.map do |m|
+        m["ticket_metric"]["reply_time_in_minutes"]["business"]
+      end.compact
+
+      mean_and_std(replies_in_minutes)
     end
 
-    tickets["results"].each do |t|
-      puts "#{t["id"]}, #{t["status"]}, #{t["subject"]}"
-    end
-  end
-
-  def unsolved
-    query = URI.encode_www_form([
-      ["query", "type:ticket status<solved"],
-      ["sort_by", "created_at"],
-      ["sort_order", "asc"],
-    ])
-
-    tickets = search_tickets(query)
-
-    results = {
-      count: tickets["results"].length,
-      open: [],
-      closed: [],
-      solved: [],
-      pending: [],
-    }
-
-    tickets["results"].each do |t|
-      results[t["status"].to_sym] << t
+    def self.calculate_first_reply_max(metrics)
+      metrics.map do |m|
+        m["ticket_metric"]["reply_time_in_minutes"]["business"]
+      end.compact.max
     end
 
-    puts "Unsolved: #{results[:count]}"
-    puts "open: #{results[:open].length}"
-    puts "pending: #{results[:pending].length}"
+    def self.calculate_first_resolve_stats(metrics)
+      resolved_in_minutes = metrics.map do |m|
+        m["ticket_metric"]["first_resolution_time_in_minutes"]["business"]
+      end.compact
 
-    tickets["results"].each do |t|
-      puts "#{t["id"]}, #{t["status"]}, #{t["subject"]}"
+      mean_and_std(resolved_in_minutes)
+    end
+
+    def self.achieve_kpi?(max_reply_time)
+      max_reply_time <= FIRST_REPLY_MINUTES_SLA
+    end
+
+    def self.display(metrics)
+      reply_minutes = calculate_first_reply_stats(metrics)
+      resolve_minutes = calculate_first_resolve_stats(metrics)
+      max_time = calculate_first_reply_max(metrics)
+
+      puts "初回返信KPI"
+      puts "目標：#{FIRST_REPLY_MINUTES_KPI}分, 実績：#{reply_minutes.values.sum(0.0).ceil}分"
+      puts
+      puts "初回返信SLA"
+      puts "SLA：#{FIRST_REPLY_MINUTES_SLA}分, 実績：#{max_time}分, 達成：#{achieve_kpi?(max_time)}"
+      puts
+      puts "初回解決KPI"
+      puts "目標：#{RESOLVE_MINUTES_KPI}分, 実績：#{resolve_minutes.values.sum(0.0).ceil}分"
+
+      puts
+      puts "--------詳細-------"
+      metrics.each do |m|
+        reply = m["ticket_metric"]["reply_time_in_minutes"]["business"] || "-"
+        printf "id:%5d, 初回返信：%4s分\n", m["ticket_metric"]["ticket_id"], reply
+      end
     end
   end
 end
@@ -258,3 +266,6 @@ reporter.unsolved
 
 puts "--------Solved tickets in this week----------"
 reporter.solved_in_thisweek
+
+puts "--------Metrics in this week----------"
+Zendesk::Metrics.display(reporter.metrics(tickets))
