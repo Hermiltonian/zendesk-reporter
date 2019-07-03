@@ -244,8 +244,10 @@ module Zendesk
       puts
       puts "--------詳細-------"
       metrics.each do |m|
+        id = m["ticket_metric"]["ticket_id"]
         reply = m["ticket_metric"]["reply_time_in_minutes"]["business"] || "-"
-        printf "id:%5d, 初回返信：%4s分\n", m["ticket_metric"]["ticket_id"], reply
+        resolve = m["ticket_metric"]["first_resolution_time_in_minutes"]["business"] || "-"
+        printf "id:%5d, 初回返信：%4s分, 初回解決：%5s分\n", id, reply, resolve
       end
     end
   end
