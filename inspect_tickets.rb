@@ -259,14 +259,34 @@ module Zendesk
     require "date"
 
     class << self
+      def parse(date_str)
+        case date_str
+        when Date
+          date_str
+        when String
+          Date.parse(date_str)
+        else
+          raise ArgumentError
+        end
+      end
+
+      def holiday?(date)
+        date = parse(date)
+        HolidayJapan.check(date) || date.sunday? || date.saturday?
+      end
+
+      def bizday?(date)
+        !holiday?(date)
+      end
+
       def count_holidays(begin_time, end_time)
-        begin_time = Date.parse(begin_time) unless begin_time.is_a?(Date)
-        end_time = Date.parse(end_time) unless end_time.is_a?(Date)
+        begin_time = parse(begin_time)
+        end_time = parse(end_time)
 
         holidays = []
 
         begin_time.upto(end_time) do |d|
-          holidays << d if HolidayJapan.check(d) || d.sunday? || d.saturday?
+          holidays << d if holiday?(d)
         end
 
         holidays.length

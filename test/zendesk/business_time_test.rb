@@ -4,6 +4,21 @@ require "./inspect_tickets"
 
 module Zendesk
   class BusinessTimeTest < Minitest::Test
+    def test_holiday_with_weekday
+      assert_equal false, Zendesk::BusinessTime.holiday?("2019-07-01")
+      assert_equal true, Zendesk::BusinessTime.bizday?("2019-07-01")
+    end
+
+    def test_holiday_with_weekend
+      assert_equal true, Zendesk::BusinessTime.holiday?("2019-07-06")
+      assert_equal false, Zendesk::BusinessTime.bizday?("2019-07-06")
+    end
+
+    def test_holiday_with_holiday
+      assert_equal true, Zendesk::BusinessTime.holiday?("2019-10-22")
+      assert_equal false, Zendesk::BusinessTime.bizday?("2019-10-22")
+    end
+
     def test_count_holidays_with_no_holidays
       begin_date = "2019-07-01" # Mon
       end_date = "2019-07-05" # Fri
