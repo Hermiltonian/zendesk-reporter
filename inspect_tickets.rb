@@ -1,3 +1,6 @@
+require "bundler/setup"
+require "holiday_japan"
+
 module Zendesk
   require 'uri'
   require 'net/http'
@@ -248,6 +251,25 @@ module Zendesk
         reply = m["ticket_metric"]["reply_time_in_minutes"]["business"] || "-"
         resolve = m["ticket_metric"]["first_resolution_time_in_minutes"]["business"] || "-"
         printf "id:%5d, 初回返信：%4s分, 初回解決：%5s分\n", id, reply, resolve
+      end
+    end
+  end
+
+  module BusinessTime
+    require "date"
+
+    class << self
+      def count_holidays(begin_time, end_time)
+        begin_time = Date.parse(begin_time) unless begin_time.is_a?(Date)
+        end_time = Date.parse(end_time) unless end_time.is_a?(Date)
+
+        holidays = []
+
+        begin_time.upto(end_time) do |d|
+          holidays << d if HolidayJapan.check(d) || d.sunday? || d.saturday?
+        end
+
+        holidays.length
       end
     end
   end
