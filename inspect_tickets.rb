@@ -291,6 +291,29 @@ module Zendesk
 
         holidays.length
       end
+
+      # def count_business_days(begin_date, end_date)
+      #   begin_time = parse(begin_date)
+      #   end_time = parse(end_date)
+
+      #   biz_days = []
+
+      #   begin_time.upto(end_time) do |d|
+      #     biz_days << d if bizday?(d)
+      #   end
+
+      #   biz_days.length
+      # end
+
+      def biz_minutes_spent(begin_time, end_time)
+        begin_time = parse(begin_time)
+        end_time = parse(end_time)
+
+        holiday_count = count_holidays(begin_time, end_time)
+        end_time = end_time.prev_day(holiday_count)
+
+        (end_time - begin_time) * 24.0 * 60.0
+      end
     end
   end
 end
