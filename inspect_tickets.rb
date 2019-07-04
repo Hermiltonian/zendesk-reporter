@@ -204,23 +204,42 @@ module Zendesk
       { mean: mean, std: standard_deviation }
     end
 
-    def self.calculate_first_reply_stats(metrics)
-      replies_in_minutes = metrics.map do |m|
-        m["ticket_metric"]["reply_time_in_minutes"]["business"]
-      end.compact
+    def self.get_first_replies(metrics)
+      metrics.map do |m|
+        spent_time = m["ticket_metric"]["reply_time_in_minutes"]["business"]
 
+        next nil if spent_time.nil?
+
+        spent_time = spent_time.to_i
+
+        begin_datetime = Zendesk::BusinessTime.parse(m["ticket_metric"]["created_at"])
+        end_datetime = begin_datetime + Rational(spent_time, 24 * 60)
+
+        Zendesk::BusinessTime.biz_minutes_spent(begin_datetime, end_datetime)
+      end.compact
+    end
+
+    def self.calculate_first_reply_stats(metrics)
+      replies_in_minutes = get_first_replies(metrics)
       mean_and_std(replies_in_minutes)
     end
 
     def self.calculate_first_reply_max(metrics)
-      metrics.map do |m|
-        m["ticket_metric"]["reply_time_in_minutes"]["business"]
-      end.compact.max
+      get_first_replies(metrics).max
     end
 
     def self.calculate_first_resolve_stats(metrics)
       resolved_in_minutes = metrics.map do |m|
-        m["ticket_metric"]["first_resolution_time_in_minutes"]["business"]
+        spent_time = m["ticket_metric"]["first_resolution_time_in_minutes"]["business"]
+
+        next nil if spent_time.nil?
+
+        spent_time = spent_time.to_i
+
+        begin_datetime = Zendesk::BusinessTime.parse(m["ticket_metric"]["created_at"])
+        end_datetime = begin_datetime + Rational(spent_time, 24 * 60)
+
+        Zendesk::BusinessTime.biz_minutes_spent(begin_datetime, end_datetime)
       end.compact
 
       mean_and_std(resolved_in_minutes)
@@ -264,7 +283,7 @@ module Zendesk
         when Date
           date_str
         when String
-          Date.parse(date_str)
+          DateTime.parse(date_str)
         else
           raise ArgumentError
         end
@@ -272,7 +291,7 @@ module Zendesk
 
       def holiday?(date)
         date = parse(date)
-        HolidayJapan.check(date) || date.sunday? || date.saturday?
+        HolidayJapan.check(Date.parse(date.to_s)) || date.sunday? || date.saturday?
       end
 
       def bizday?(date)

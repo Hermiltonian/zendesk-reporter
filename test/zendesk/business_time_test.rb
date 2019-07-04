@@ -20,17 +20,21 @@ module Zendesk
     end
 
     def test_count_holidays_with_no_holidays
-      begin_date = "2019-07-01" # Mon
-      end_date = "2019-07-05" # Fri
+      # begin_date = "2019-07-01" # Mon
+      # end_date = "2019-07-05" # Fri
+      begin_time = "2019-07-01T10:00:00+09:00" # Thur
+      end_time = "2019-07-05T11:00:00+09:00" # Thur
 
-      assert_equal 0, Zendesk::BusinessTime.count_holidays(begin_date, end_date)
+      assert_equal 0, Zendesk::BusinessTime.count_holidays(begin_time, end_time)
     end
 
     def test_count_holidays_only_with_weekend
-      begin_date = "2019-07-04" # Thur
-      end_date = "2019-07-08" # Mon
+      begin_date = "2019-10-21T10:00:00+09:00" # Mon
+      end_date = "2019-10-23T17:00:00+09:00" # Tue
+      # begin_date = "2019-07-04" # Thur
+      # end_date = "2019-07-08" # Mon
 
-      assert_equal 2, Zendesk::BusinessTime.count_holidays(begin_date, end_date)
+      assert_equal 1, Zendesk::BusinessTime.count_holidays(begin_date, end_date)
     end
 
     def test_count_holidays_only_with_holiday
@@ -53,6 +57,41 @@ module Zendesk
       end_date = "2019-07-06" # Sat
 
       assert_equal 1, Zendesk::BusinessTime.count_holidays(begin_date, end_date)
+    end
+
+    def test_biz_minutes_spent_between_same_day
+      begin_time = "2019-07-04T10:00:00+09:00" # Thur
+      end_time = "2019-07-04T11:00:00+09:00" # Thur
+
+      assert_equal 60 * 1, Zendesk::BusinessTime.biz_minutes_spent(begin_time, end_time)
+    end
+
+    def test_biz_minutes_spent_with_weekday
+      begin_time = "2019-07-04T10:00:00+09:00" # Thur
+      end_time = "2019-07-05T10:00:00+09:00" # Fri
+
+      assert_equal 60 * 24, Zendesk::BusinessTime.biz_minutes_spent(begin_time, end_time)
+    end
+
+    def test_biz_minutes_spent_end_date_is_holiday
+      begin_time = "2019-07-04T10:00:00+09:00" # Thur
+      end_time = "2019-07-07T10:00:00+09:00" # Sun
+
+      assert_equal 60 * 24, Zendesk::BusinessTime.biz_minutes_spent(begin_time, end_time)
+    end
+
+    def test_biz_minutes_spent_with_weekend
+      begin_time = "2019-07-04T10:00:00+09:00" # Thur
+      end_time = "2019-07-08T10:00:00+09:00" # Sun
+
+      assert_equal 60 * 24 * 2, Zendesk::BusinessTime.biz_minutes_spent(begin_time, end_time)
+    end
+
+    def test_biz_minutes_spent_only_with_holiday
+      begin_time = "2019-10-21T10:00:00+09:00" # Mon
+      end_time = "2019-10-23T17:00:00+09:00" # Tue
+
+      assert_equal 60 * (24 * 1 + 7), Zendesk::BusinessTime.biz_minutes_spent(begin_time, end_time)
     end
   end
 end
