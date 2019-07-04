@@ -104,6 +104,7 @@ module Zendesk
     def new_in_thisweek(tickets)
       assignee = {
         HogeSan: [],
+        UnAssigned: [],
       }
 
       users = {
@@ -112,7 +113,11 @@ module Zendesk
 
       tickets["results"].each do |t|
         user_name = users[t["assignee_id"].to_s.to_sym]
-        assignee[user_name.to_sym] << t
+        if user_name
+          assignee[user_name.to_sym] << t
+        else
+          assignee[:UnAssigned] << t
+        end
       end
 
       puts "created: #{tickets["results"].length}"
