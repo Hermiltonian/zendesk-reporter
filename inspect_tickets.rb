@@ -172,6 +172,7 @@ module Zendesk
         closed: [],
         solved: [],
         pending: [],
+        new: [],
       }
 
       tickets["results"].each do |t|
@@ -179,6 +180,7 @@ module Zendesk
       end
 
       puts "Unsolved: #{results[:count]}"
+      puts "new: #{results[:new].length}"
       puts "open: #{results[:open].length}"
       puts "pending: #{results[:pending].length}"
 
