@@ -204,11 +204,11 @@ module Zendesk
       squared_array = array.map { |t| t**2 }
 
       mean = array.sum(0.0) / array.length
-      squared_mean = squared_array.sum(0.0) / squared_array.length
+      squared_mean = squared_array.sum(0.0) / (squared_array.length - 1)
 
-      standard_deviation = Math.sqrt(squared_mean - mean)
+      standard_deviation = Math.sqrt(squared_mean - mean**2 * array.length / (array.length - 1))
 
-      { mean: mean, std: standard_deviation }
+      { mean: mean.ceil, std: standard_deviation.ceil }
     end
 
     def self.get_first_replies(metrics)
