@@ -264,6 +264,9 @@ module Zendesk
       resolve_minutes = calculate_first_resolve_stats(metrics)
       max_time = calculate_first_reply_max(metrics)
 
+      replies = get_first_replies(metrics)
+      resolves = get_first_resolve(metrics)
+
       puts "初回返信KPI"
       puts "目標：#{FIRST_REPLY_MINUTES_KPI}分, 実績：#{reply_minutes.values.sum(0.0).ceil}分"
       puts
@@ -275,10 +278,10 @@ module Zendesk
 
       puts
       puts "--------詳細-------"
-      metrics.each do |m|
-        id = m["ticket_metric"]["ticket_id"]
-        reply = m["ticket_metric"]["reply_time_in_minutes"]["business"] || "-"
-        resolve = m["ticket_metric"]["first_resolution_time_in_minutes"]["business"] || "-"
+      0.upto(metrics.length - 1) do |i|
+        id = metrics[i]["ticket_metric"]["ticket_id"]
+        reply = replies[i]
+        resolve = resolves[i]
         printf "id:%5d, 初回返信：%4s分, 初回解決：%5s分\n", id, reply, resolve
       end
     end
