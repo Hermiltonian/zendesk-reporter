@@ -344,7 +344,8 @@ module Zendesk
         holiday_count = count_holidays(begin_time, end_time)
         end_time = end_time.prev_day(holiday_count)
 
-        (end_time - begin_time) * 24.0 * 60.0
+        biz_time = (end_time - begin_time) * 24.0 * 60.0
+        biz_time.ceil
       end
     end
   end
