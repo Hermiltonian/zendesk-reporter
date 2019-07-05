@@ -235,8 +235,8 @@ module Zendesk
       get_first_replies(metrics).max
     end
 
-    def self.calculate_first_resolve_stats(metrics)
-      resolved_in_minutes = metrics.map do |m|
+    def self.get_first_resolve(metrics)
+      metrics.map do |m|
         spent_time = m["ticket_metric"]["first_resolution_time_in_minutes"]["business"]
 
         next nil if spent_time.nil?
@@ -248,7 +248,10 @@ module Zendesk
 
         Zendesk::BusinessTime.biz_minutes_spent(begin_datetime, end_datetime)
       end.compact
+    end
 
+    def self.calculate_first_resolve_stats(metrics)
+      resolved_in_minutes = get_first_resolve(metrics)
       mean_and_std(resolved_in_minutes)
     end
 
