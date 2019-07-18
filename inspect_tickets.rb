@@ -201,6 +201,7 @@ module Zendesk
     RESOLVE_MINUTES_KPI = 60 * 24 * 3
 
     def self.mean_and_std(array)
+      array.compact!
       squared_array = array.map { |t| t**2 }
 
       mean = array.sum(0.0) / array.length
@@ -223,7 +224,7 @@ module Zendesk
         end_datetime = begin_datetime + Rational(spent_time, 24 * 60)
 
         Zendesk::BusinessTime.biz_minutes_spent(begin_datetime, end_datetime)
-      end.compact
+      end
     end
 
     def self.calculate_first_reply_stats(metrics)
@@ -247,7 +248,7 @@ module Zendesk
         end_datetime = begin_datetime + Rational(spent_time, 24 * 60)
 
         Zendesk::BusinessTime.biz_minutes_spent(begin_datetime, end_datetime)
-      end.compact
+      end
     end
 
     def self.calculate_first_resolve_stats(metrics)
