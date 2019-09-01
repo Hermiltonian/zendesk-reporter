@@ -269,13 +269,13 @@ module Zendesk
       resolves = get_first_resolve(metrics)
 
       puts "初回返信KPI"
-      puts "目標：#{FIRST_REPLY_MINUTES_KPI}分, 実績（平均）：#{reply_minutes[:mean]}分, 実績（σ）：#{reply_minutes[:std]}分, KPI実績：#{reply_minutes.values.sum(0)}分"
+      puts "目標：#{FIRST_REPLY_MINUTES_KPI}分, 実績（平均）：#{reply_minutes[:mean]}分, 実績（σ）：#{reply_minutes[:std]}分, KPI実績：#{(reply_minutes.values.sum(0.0) / 60 / 24).ceil(2)}営業日"
       puts
       puts "初回返信SLA"
       puts "SLA：#{FIRST_REPLY_MINUTES_SLA}分, 実績：#{max_time}分, 達成：#{achieve_kpi?(max_time)}"
       puts
       puts "初回解決KPI"
-      puts "目標：#{RESOLVE_MINUTES_KPI}分, 実績（平均）：#{resolve_minutes[:mean]}分, 実績（σ）：#{resolve_minutes[:std]}分, KPI実績：#{resolve_minutes.values.sum(0)}分"
+      puts "目標：#{RESOLVE_MINUTES_KPI}分, 実績（平均）：#{resolve_minutes[:mean]}分, 実績（σ）：#{resolve_minutes[:std]}分, KPI実績：#{(resolve_minutes.values.sum(0.0) / 60 / 24).ceil(2)}営業日"
 
       puts
       puts "--------詳細-------"
