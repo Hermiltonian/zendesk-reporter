@@ -233,7 +233,7 @@ module Zendesk
     end
 
     def self.calculate_first_reply_max(metrics)
-      get_first_replies(metrics).max
+      get_first_replies(metrics).compact.max
     end
 
     def self.get_first_resolve(metrics)
