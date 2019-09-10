@@ -62,7 +62,9 @@ module Zendesk
       tickets["results"].keep_if do |t|
         measure = true
         t["custom_fields"].each do |f|
-          measure = f["value"].nil? and break if f["id"].to_s == "360000102941"
+          next unless f["id"].to_s == "360000102941"
+          measure = !!f["value"]
+          break
         end
 
         measure
