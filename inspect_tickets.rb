@@ -7,12 +7,15 @@ module Zendesk
   require "openssl"
   require "json"
   require "base64"
+  require "csv"
 
   class Ticket
     attr_reader :email
     attr_reader :token
     attr_reader :begin_date
     attr_reader :end_date
+    attr_reader :assignee
+    attr_reader :users
 
     def initialize
       begin
@@ -31,10 +34,28 @@ module Zendesk
 
       file.close
 
+      fetch_users
+
       @begin_date = "2019-06-20T17:00:00+09:00"
       @end_date = "2019-06-27T17:00:00+09:00"
       # @begin_date = (Time.now - 3600 * 24 * 7).strftime("%FT17:00:00+09:00")
       # @end_date = (Time.now).strftime("%FT17:00:00+09:00")
+    end
+
+    def fetch_users
+      @assignee = { UnAssigned: [] }
+      @users = {}
+
+      begin
+        CSV.foreach("./users.csv", headers: true, skip_blanks: true) do |row|
+          next if row["id"].nil?
+          @users.store(row["id"].to_s.to_sym, row["name"])
+          @assignee.store(row["name"].to_sym, [])
+        end
+      rescue
+        puts "ユーザー一覧ファイル'users.csv'を準備してください。"
+        return
+      end
     end
 
     def search_tickets(query)
@@ -112,26 +133,17 @@ module Zendesk
     end
 
     def new_in_thisweek(tickets)
-      assignee = {
-        HogeSan: [],
-        UnAssigned: [],
-      }
-
-      users = {
-        "000000000000": "HogeSan",
-      }
-
       tickets["results"].each do |t|
-        user_name = users[t["assignee_id"].to_s.to_sym]
+        user_name = @users[t["assignee_id"].to_s.to_sym]
         if user_name
-          assignee[user_name.to_sym] << t
+          @assignee[user_name.to_sym] << t
         else
-          assignee[:UnAssigned] << t
+          @assignee[:UnAssigned] << t
         end
       end
 
       puts "created: #{tickets["results"].length}"
-      assignee.each do |user, t|
+      @assignee.each do |user, t|
         puts "#{user.to_s}: #{t.length}"
       end
 
@@ -149,21 +161,13 @@ module Zendesk
 
       tickets = search_tickets(query)
 
-      assignee = {
-        HogeSan: [],
-      }
-
-      users = {
-        "000000000000": "HogeSan",
-      }
-
       tickets["results"].each do |t|
-        user_name = users[t["assignee_id"].to_s.to_sym]
-        assignee[user_name.to_sym] << t
+        user_name = @users[t["assignee_id"].to_s.to_sym]
+        @assignee[user_name.to_sym] << t
       end
 
       puts "solved: #{tickets["results"].length}"
-      assignee.each do |user, t|
+      @assignee.each do |user, t|
         puts "#{user.to_s}: #{t.length}"
       end
 
