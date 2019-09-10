@@ -214,10 +214,10 @@ module Zendesk
       array.compact!
       squared_array = array.map { |t| t**2 }
 
-      mean = array.sum(0.0) / array.length
-      squared_mean = squared_array.sum(0.0) / (squared_array.length - 1)
+      mean = array.length > 0 ? array.sum(0.0) / array.length : 0
+      squared_mean = squared_array.length > 1 ? squared_array.sum(0.0) / (squared_array.length - 1) : 0
 
-      standard_deviation = Math.sqrt(squared_mean - mean**2 * array.length / (array.length - 1))
+      standard_deviation = array.length > 1 ? Math.sqrt(squared_mean - mean**2 * array.length / (array.length - 1)) : 0
 
       { mean: mean.ceil, std: standard_deviation.ceil }
     end
@@ -267,6 +267,7 @@ module Zendesk
     end
 
     def self.achieve_kpi?(max_reply_time)
+      return "-" unless max_reply_time
       max_reply_time <= FIRST_REPLY_MINUTES_SLA
     end
 
