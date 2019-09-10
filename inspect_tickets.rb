@@ -59,8 +59,8 @@ module Zendesk
 
       tickets = JSON.parse(response.body)
       tickets["results"].delete_if { |t| t["status"].nil? }
-      tickets["results"].keep_if do |t|
-        measure = true
+      tickets["results"].delete_if do |t|
+        measure = false
         t["custom_fields"].each do |f|
           next unless f["id"].to_s == "360000102941"
           measure = !!f["value"]
