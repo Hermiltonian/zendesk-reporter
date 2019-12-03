@@ -163,7 +163,11 @@ module Zendesk
 
       tickets["results"].each do |t|
         user_name = @users[t["assignee_id"].to_s.to_sym]
-        @assignee[user_name.to_sym] << t
+        if user_name.nil?
+          @assignee[:UnAssigned] << t
+        else
+          @assignee[user_name.to_sym] << t
+        end
       end
 
       puts "solved: #{tickets["results"].length}"
