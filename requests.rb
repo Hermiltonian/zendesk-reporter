@@ -190,7 +190,7 @@ module Zendesk
       </html>
       EOT
 
-      File.open("issues.html", "w") do |f|
+      File.open("results/html/issues.html", "w") do |f|
         f.print html
       end
     end
@@ -226,7 +226,7 @@ module Zendesk
       end
 
       require "kconv"
-      File.open("issues.csv", "w") do |f|
+      File.open("results/csv/issues.csv", "w") do |f|
         f.print csv.to_csv.tosjis
       end
     end
