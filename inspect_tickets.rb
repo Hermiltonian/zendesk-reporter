@@ -133,6 +133,14 @@ module Zendesk
     end
 
     def new_in_thisweek(tickets)
+      types = {
+        "question":   0,
+        "problem":    0,
+        "incident":   0,
+        "task":       0,
+        "unassigned": 0,
+      }.transform_keys(&:to_s)
+
       tickets["results"].each do |t|
         user_name = @users[t["assignee_id"].to_s.to_sym]
         if user_name
@@ -140,11 +148,19 @@ module Zendesk
         else
           @assignee[:UnAssigned] << t
         end
+
+        type = t["type"] || "unassigned"
+        types[type] += 1
       end
 
       puts "created: #{tickets["results"].length}"
       @assignee.each do |user, t|
         puts "#{user.to_s}: #{t.length}"
+      end
+
+      puts "--------type---------"
+      types.each do |k, v|
+        puts "#{k.to_s}: #{v}"
       end
 
       tickets["results"].each do |t|
