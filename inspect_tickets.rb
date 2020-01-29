@@ -154,6 +154,7 @@ module Zendesk
       end
 
       puts "created: #{tickets["results"].length}"
+      puts "--------assignee---------"
       @assignee.each do |user, t|
         puts "#{user.to_s}: #{t.length}"
       end
@@ -163,6 +164,7 @@ module Zendesk
         puts "#{k.to_s}: #{v}"
       end
 
+      puts "--------details---------"
       tickets["results"].each do |t|
         puts "#{t["id"]}, #{t["status"]}, #{t["subject"]}"
       end
