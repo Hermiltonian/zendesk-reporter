@@ -238,9 +238,10 @@ module Zendesk
       tickets = self.all
 
       domains = tickets.map do |t|
-        next unless t["via"]["channel"] == "email"
+        next unless t["via"]["channel"] == "email" && !t["via"]["source"]["from"]["address"].nil?
 
         t["via"]["source"]["from"]["address"].split('@').last
+        end
       end.compact!
 
       domains_counter = domains.inject({}) do |result, d|
