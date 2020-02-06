@@ -1,7 +1,7 @@
 #!/bin/sh
 now=$(date "+%Y%m%d%H%M%S")
-report_file="./results/report_${now}.txt"
+report_file="./results/requests/requests_${now}.txt"
 
 echo "実行時刻：$(date)"
 
-ruby requests.rb "$@"
+ruby requests.rb "$@" | tee "${report_file}"
