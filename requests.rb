@@ -60,16 +60,19 @@ module Zendesk
       if time.is_a?(String)
         require "date"
         time = DateTime.parse(time).to_time
-      elsif !time.is_a?(Time) && !start_time.is_a?(Integer)
+      elsif !time.is_a?(Time) && !time.is_a?(Integer)
         return false
       end
 
       time.to_i
     end
 
-    def all
-      puts @begin_date
-      url = URI.parse("https://sample.zendesk.com/api/v2/incremental/tickets.json?start_time=#{to_time_int(@begin_date)}&end_time=#{to_time_int(@end_date)}")
+    def all(next_start_time = nil, next_end_time = nil)
+      start_time = next_start_time || @begin_date
+      end_time = next_end_time || @end_date
+
+      puts start_time
+      url = URI.parse("https://sample.zendesk.com/api/v2/incremental/tickets.json?start_time=#{to_time_int(start_time)}&end_time=#{to_time_int(end_time)}")
 
       auth = "#{@email}/token:#{@token}"
       enc = Base64.encode64(auth).gsub("\n", "")
