@@ -75,7 +75,7 @@ module Zendesk
       end
 
       if response.header["X-Rate-Limit-Remaining"].to_i < 10
-        puts "Rate Limit is low!! Please wait a minute for recovering"
+        puts "Low Rate Limit #{response.header["X-Rate-Limit-Remaining"].to_i}!! Please wait a minute for recovering"
         sleep(10)
       end
 
