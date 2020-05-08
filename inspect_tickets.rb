@@ -16,8 +16,9 @@ module Zendesk
     attr_reader :end_date
     attr_reader :assignee
     attr_reader :users
+    attr_reader :excluded_ids
 
-    def initialize
+    def initialize(excluded_ids: [])
       begin
         file = File.open("./token.txt", "r")
       rescue
@@ -35,6 +36,8 @@ module Zendesk
       file.close
 
       fetch_users
+
+      @excluded_ids = excluded_ids.map(&:to_i)
 
       @begin_date = "2019-06-20T17:00:00+09:00"
       @end_date = "2019-06-27T17:00:00+09:00"
@@ -72,7 +75,7 @@ module Zendesk
       end
 
       if response.header["X-Rate-Limit-Remaining"].to_i < 10
-        puts "Rate Limit is low!! Please wait a minute for recovering"
+        puts "Low Rate Limit #{response.header["X-Rate-Limit-Remaining"].to_i}!! Please wait a minute for recovering"
         sleep(10)
       end
 
@@ -89,6 +92,10 @@ module Zendesk
         end
 
         measure
+      end
+
+      tickets["results"].delete_if do |t|
+        @excluded_ids.include?(t["id"])
       end
 
       tickets
@@ -389,7 +396,7 @@ module Zendesk
   end
 end
 
-reporter = Zendesk::Ticket.new
+reporter = Zendesk::Ticket.new(excluded_ids: ARGV)
 
 puts "--------Reported Dated--------------------"
 puts "begin: #{reporter.begin_date}"
