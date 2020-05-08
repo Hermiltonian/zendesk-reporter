@@ -5,7 +5,7 @@ Zendeskチケット情報を取得するツールです。
 ## APIトークン
 同じディレクトリに`token.txt`を以下の内容で作成してください。
 
-```token.txt
+```text
 email=(あなたのアカウントメールアドレス)
 token=(あなたのAPIトークン)
 ```
@@ -13,7 +13,7 @@ token=(あなたのAPIトークン)
 ## エージェント一覧
 同じディレクトリに`users.csv`を以下の内容で作成してください。
 
-```users.csv
+```csv
 id,name
 (ZendeskエージェントID),(本ツールで利用する表示名)
 (ZendeskエージェントID),(本ツールで利用する表示名)
@@ -21,7 +21,7 @@ id,name
 
 ## チケット状態レポート取得
 
-```
+```shell
 $ ./make_report.sh
 ```
 
@@ -30,13 +30,13 @@ results/reportsディレクトリに結果が出力されます。
 集計対象から除外したいチケットがある場合、引数にチケットidを指定します。
 `make_report.sh [id ...]`
 
-```
+```shell
 $ ./make_report.sh 1021 1030
 ```
 
 ## リクエスターレポート取得
 
-```
+```shell
 $ ./requests.sh html|csv|domain
 ```
 
