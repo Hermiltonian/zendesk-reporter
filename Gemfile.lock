@@ -2,7 +2,7 @@ GEM
   remote: https://rubygems.org/
   specs:
     holiday_japan (1.4.3)
-    minitest (5.11.3)
+    minitest (5.14.0)
 
 PLATFORMS
   ruby
@@ -12,4 +12,4 @@ DEPENDENCIES
   minitest
 
 BUNDLED WITH
-   1.17.3
+   2.1.4
